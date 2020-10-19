@@ -1,6 +1,6 @@
 ;============================================================================
-; Installer for FlexGui
-; Created with Inno Setup 6.0.3.
+; Installer for FlexProp
+; Created with Inno Setup 6.0.5.
 ; (C) 2019-2020 Jac Goudsmit
 ;
 ; Licensed under the MIT license.
@@ -46,7 +46,7 @@
 #endsub
 
 ; Preprocessor code to parse the version.tcl file at compile time
-#for {FileHandle = FileOpen("..\flexgui\src\version.tcl"); \
+#for {FileHandle = FileOpen("..\flexprop\src\version.tcl"); \
   FileHandle && !FileEof(FileHandle); ""} \
   ProcessLine
 #if FileHandle
@@ -71,20 +71,20 @@
 ; Source directory
 ; The file you are reading was designed to get its sources from this
 ; location.
-#define SRCDIR      "..\flexgui"
+#define SRCDIR      "..\flexprop"
 
 ; EXE file to extract version information from
-#define EXE         "flexgui.exe"
+#define EXE         "flexprop.exe"
 
 ; URL for more information
-#define URL         "https://github.com/totalspectrum/flexgui"
+#define URL         "https://github.com/totalspectrum/flexprop"
 
 ; Base directory to use for installation
 #define BASEDIR     "Total Spectrum Software"
 
 ; The easiest way to set the following information on the installer with
 ; InnoSetup is to extract it from an executable file. Unfortunately the
-; product name and version number on the Flexgui executable aren't correct
+; product name and version number on the FlexProp executable aren't correct
 ; because that .exe is really just the Tcl/Tk runtime.
 ; In case this changes in the future, the code to extract the data is
 ; commented out below.
@@ -92,13 +92,13 @@
 ; using the InnoSetup preprocessor.
 ;#define PRODNAME    GetStringFileInfo(EXE, PRODUCT_NAME)
 ;#define VERSION     GetStringFileInfo(EXE, FILE_VERSION)
-#define PRODNAME    "FlexGUI for Windows"
+#define PRODNAME    "FlexProp for Windows"
 #define VERSION     GetTcl("spin2gui_version_major") + "." + GetTcl("spin2gui_version_minor") + "." + GetTcl("spin2gui_version_rev") + GetTcl("spin2gui_beta")
 #define COMPANY     GetFileCompany(EXE)
 #define COPYRIGHT   GetFileCopyright(EXE)
 
 ; Short product name for use in directories etc.
-#define SHORTPROD   "FlexGUI"
+#define SHORTPROD   "FlexProp"
 
 ; Default directory to store projects
 #define DATADIR     "{commondocs}\"+SHORTPROD
@@ -141,6 +141,9 @@ Name: "samples";        Description: "Install Sample Code in {#DATADIR} folder";
 ; example:
 ;Type: files; Name: "{app}\nolongerneeded.exe";
 
+Type: files; Name: "{app}\flexgui.exe";
+Type: files; Name: "{app}\flexgui.tcl";
+
 [Dirs]
 ; Create the default directory to store projects
 Name:     "{#DATADIR}"
@@ -150,8 +153,8 @@ Name:     "{#DATADIR}"
 ; it should not only be removed from this section, but it should also
 ; be added to the InstallDelete section.
 
-Source:   "flexgui.exe";                DestDir: "{app}";                             Flags: ignoreversion;
-Source:   "flexgui.tcl";                DestDir: "{app}";                             Flags: ignoreversion;
+Source:   "flexprop.exe";               DestDir: "{app}";                             Flags: ignoreversion;
+Source:   "flexprop.tcl";               DestDir: "{app}";                             Flags: ignoreversion;
 Source:   "src\*";                      DestDir: "{app}\src";                         Flags: ignoreversion recursesubdirs;
 Source:   "License.txt";                DestDir: "{app}";                             Flags: ignoreversion;
 Source:   "README.md";                  DestDir: "{app}";                             Flags: ignoreversion;
@@ -170,35 +173,46 @@ Source:   "include\*";                  DestDir: "{app}\include";               
 Source:   "samples\*";                  DestDir: "{#DATADIR}\samples";                Flags: ignoreversion recursesubdirs uninsneveruninstall; Components: samples
 
 [Icons]
-Name:     "{group}\{#PRODNAME}";        Filename: "{app}\flexgui.exe"; WorkingDir: "{#DATADIR}";
-Name:     "{group}\Documentation";      Filename: "{app}\doc";         WorkingDir: "{app}\doc"; Components: docs
+Name:     "{group}\{#PRODNAME}";        Filename: "{app}\flexprop.exe"; WorkingDir: "{#DATADIR}";
+Name:     "{group}\Documentation";      Filename: "{app}\doc";          WorkingDir: "{app}\doc"; Components: docs
 
 [UninstallDelete]
 ; Files that should go in here are files that weren't installed by the
 ; installer, but need to be deleted to at uninstall time.
 
-Type: files; Name: "{%USERPROFILE}\.flexgui.config"
+Type: files; Name: "{%USERPROFILE}\.flexprop.config"
 
 [Run]
-Filename: {app}\flexgui.exe;            Description: "Launch {#SHORTPROD} after installation"; Flags: nowait postinstall skipifsilent
+Filename: {app}\flexprop.exe;           Description: "Launch {#SHORTPROD} after installation"; Flags: nowait postinstall skipifsilent
 
 [Code]
 
+const
+  UninstallKeyName = 'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\30EA9831-3B35-41B5-8D82-CE51796D014E_is1';
+
+var
+  ConfigFileName: String;
+
 {
-  This procedure changes the location of the configuration file from the
-  install directory ($ROOTDIR) which is read-only, to the user's home
-  directory ($::env(HOME)).
+  This procedure reads the give TCL source file and tries to find the
+  line where the CONFIG_FILE variable is set.
+  Optionally, the configuration file name is replaced by a new string.
+  Keep in mind that the file name has to be in double quotes for TCL.
 }
-procedure ChangeConfigLocation(FileName: string);
+procedure ReadModifyConfigFileSetting(
+  FileName: string; { TCL source file }
+  var OldConfigFileName: string; { Output old config file name }
+  NewConfigFileName: string); { Replacement config file name; blank=don't change }
 var
   S: string;
   LineCount: Integer;
   SectionLine: Integer;    
   Lines: TArrayOfString;
+  Replaced: Boolean;
 begin
   if LoadStringsFromFile(FileName, Lines) then
   begin
-    Log('Changing file: ' + FileName);
+    Log('Reading or changing file: ' + FileName);
     LineCount := GetArrayLength(Lines);
     for SectionLine := 0 to LineCount - 1 do
     begin
@@ -207,12 +221,20 @@ begin
       if (Copy(S, 1, 16) = 'set CONFIG_FILE ') then
       begin
         Log('CONFIG location found: ' + S);
-        StringChangeEx(Lines[SectionLine], '$ROOTDIR', '$::env(HOME)', False);
-        Log('Replaced by: ' + Lines[SectionLine]);
+        OldConfigFileName := Copy(Lines[SectionLine], 17, 256);
+        Replaced := (Length(NewConfigFileName) <> 0)
+        if (Replaced) then
+        begin
+          Lines[Sectionline] := 'set CONFIG_FILE ' + NewConfigFileName;
+          Log('Replaced by: ' + Lines[SectionLine]);
+        end;
         Break;
       end;
     end;
-    SaveStringsToFile(FileName, Lines, False);
+    if (Replaced) then
+    begin
+      SaveStringsToFile(FileName, Lines, False);
+    end;
   end;
 end;
 
@@ -222,9 +244,32 @@ end;
   file location.
 }
 procedure CurStepChanged(CurStep: TSetupStep);
+var
+  Dummy : String;
 begin
+  if (CurStep = ssInstall) then
+  begin
+    { Initialize the configuration file name }
+    ConfigFileName := '"$::env(HOME)/.' + LowerCase(ExpandConstant('{#SHORTPROD}')) + '.config"';
+
+    {
+      If we're doing an upgrade install, get the name of the configuration 
+      file from the previous installation
+    }
+    if (RegKeyExists(HKLM, UninstallKeyName)) then
+    begin
+      Log('Detected an upgrade install. Retrieving the old config name')
+      ReadModifyConfigFileSetting(ExpandConstant('{app}\src\gui.tcl'), ConfigFileName, '');
+    end;
+  end;
+
   if (CurStep = ssPostInstall) then
   begin
-    ChangeConfigLocation(ExpandConstant('{app}\src\gui.tcl'));
+    {
+      After the installation, update the configuration file name in the newly
+      installed TCL source code.
+    }
+    Log('Replacing config file name');
+    ReadModifyConfigFileSetting(ExpandConstant('{app}\src\gui.tcl'), Dummy, ConfigFileName);
   end;
 end;

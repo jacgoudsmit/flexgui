@@ -13,3 +13,4 @@ spin2gui_dir
 src/rc/wish.res.o
 pandoc.yml
 flexgui/
+flexprop/

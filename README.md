@@ -1,8 +1,8 @@
 # Introduction
 
-FlexGUI is a simple GUI for creating applications on the Parallax Propeller 2 (or 1), using assembler, Spin, BASIC or C. It consists of a very plain front end IDE, the fastspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows flexgui to work on Propeller 1 systems as well.
+FlexProp is a simple GUI for creating applications on the Parallax Propeller 2 (or 1), using assembler, Spin, BASIC or C. It consists of a very plain front end IDE, the fastspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows flexprop to work on Propeller 1 systems as well.
 
-FlexGUI is distributed under the MIT license; see the file License.txt for details.
+FlexProp is distributed under the MIT license; see the file License.txt for details.
 
 ## Features
 
@@ -10,7 +10,7 @@ FlexGUI is distributed under the MIT license; see the file License.txt for detai
 * Supports PASM, Spin, BASIC, and C
 * View output PASM code
 * Built in terminal emulator
-* GUI checks files for external changes, so you may use any editor and compile in FlexGUI
+* GUI checks files for external changes, so you may use any editor and compile in FlexProp
 * Options for interacting directly with P2 ROM monitor and ROM TAQOZ
 * Micropython for P2 sample included
 
@@ -71,23 +71,23 @@ fastspin supports a C dialect called FlexC, which is intended to be C99 compatib
 
 ### Installing for ALL users
 
-To install FlexGUI for all users, download and run FlexGUISetup-X.X.X.exe from the releases page (where X.X.X is the latest version number). The latest installer is always located at:
+To install FlexProp for all users, download and run FlexPropSetup-X.X.X.exe from the releases page (where X.X.X is the latest version number). The latest installer is always located at:
 
-   https://github.com/jacgoudsmit/flexgui/releases/latest
+   https://github.com/jacgoudsmit/flexprop/releases/latest
 
-You will need administrator credentials to perform the installation. Installing sample code and documentation is optional. The installer will install the sample code in the common documents folder; usually the sample code will end up in C:\Users\Public\Documents\FlexGUI but this may change depending on your Windows installation.
+You will need administrator credentials to perform the installation. Installing sample code and documentation is optional. The installer will install the sample code in the common documents folder; usually the sample code will end up in C:\Users\Public\Documents\FlexProp but this may change depending on your Windows installation.
 
-### Running FlexGUI without installing
+### Running FlexProp without installing
 
-To run FlexGUI without installing it for all users, download the flexgui.zip file from the releases. The latest release is always located at:
+To run FlexProp without installing it for all users, download the flexprop.zip file from the releases. The latest release is always located at:
 
-   https://github.com/totalspectrum/flexgui/releases/latest
+   https://github.com/totalspectrum/flexprop/releases/latest
    
-Create a directory called "flexgui" (or whatever you'd like) and unpack the .zip file into that directory. Make sure the directory you create is writable, so do not unpack into a system directory like "Program Files". Use your desktop or a folder directly under "C:" instead.
+Create a directory called "flexprop" (or whatever you'd like) and unpack the .zip file into that directory. Make sure the directory you create is writable, so do not unpack into a system directory like "Program Files". Use your desktop or a folder directly under "C:" instead.
 
 ## Running on Windows
 
-If you used the installer, you can start FlexGUI from the Start Menu. Otherwise, you can run flexgui.exe from the folder where you unzipped flexgui.zip.
+If you used the installer, you can start FlexProp from the Start Menu. Otherwise, you can run flexprop.exe from the folder where you unzipped flexprop.zip.
 
 Use the `File` menu to open a Spin or BASIC file. You may open multiple files. The one that is currently selected will be treated as the top level project if you try to compile and/or run. The commands used for compiling or running are settable from the `Commands > Configure Commands...` menu item. Compiling and running on Prop2 is the main focus, but you can configure for virtually any situation where just one file is compiled. So for example it should be feasible to use this GUI for `p2gcc` with a bit of tweaking.
 
@@ -95,7 +95,7 @@ Also under the `File` menu is an option for viewing the listing file. This will 
 
 To change between P1 and P2 development use `Configure Commands...` and select the appropriate default.
 
-Your changes to commands, library directories, and other configuration information is saved in a file called .flexgui.config in your home directory (if you used the installer) or in the directory where flexgui.exe is located (if you used flexgui.zip).
+Your changes to commands, library directories, and other configuration information is saved in a file called .flexprop.config in your home directory (if you used the installer) or in the directory where flexprop.exe is located (if you used flexprop.zip).
 
 ### Library Directories
 
@@ -107,23 +107,23 @@ Under the `File` menu is an option for viewing the listing file, which shows the
 
 ## Other platforms
 
-Only a Windows binary is provided. For other platforms, run the `flexgui.tcl` script. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X). For linux, you'll also need to get binary versions of `fastspin` and `loadp2` for your platform, and copy them into the `bin` folder. For Windows and Mac OS X these binaries are already provided in the standard binary distribution of flexgui.
+Only a Windows binary is provided. For other platforms, run the `flexprop.tcl` script. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X). For linux, you'll also need to get binary versions of `fastspin` and `loadp2` for your platform, and copy them into the `bin` folder. For Windows and Mac OS X these binaries are already provided in the standard binary distribution of flexprop.
 
 ## High level languages
 
-The main advantage of flexgui over PNut (the "official" development tool for the Prop2) is that PNut supports only Spin 2, whereas flexgui supports Spin 1, Spin 2, BASIC, and C. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
+The main advantage of FlexProp over PNut (the "official" development tool for the Prop2) is that PNut supports only Spin 2, whereas FlexProp supports Spin 1, Spin 2, BASIC, and C. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
 
 The code is compiled to P2 assembler by fastspin. This is somewhat different from the way Spin traditionally worked on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that fastspin does work for Prop1, and compiles to P1 assembler in that case.)
 
-Documentation for the various languages supported is in the `doc` folder of the unpacked flexgui. BASIC is the best documented. The Spin documentation assumes familiarity with the original (Propeller1) Spin manual, and outlines the differences in the language fastspin accepts. The C documentation is a placeholder for now and mostly covers the fastspin specific extensions to C.
+Documentation for the various languages supported is in the `doc` folder of the unpacked flexprop. BASIC is the best documented. The Spin documentation assumes familiarity with the original (Propeller1) Spin manual, and outlines the differences in the language fastspin accepts. The C documentation is a placeholder for now and mostly covers the fastspin specific extensions to C.
 
 # Modifying the GUI
 
-The scripts used are in the `src` subdirectory, so you can customize them to your heart's content. The main `flexgui.exe` program is basically just the Tcl/Tk interpreter (from the standard Tk distribution) with a tiny startup script that reads `src/gui.tcl`.
+The scripts used are in the `src` subdirectory, so you can customize them to your heart's content. The main `flexprop.exe` program is basically just the Tcl/Tk interpreter (from the standard Tk distribution) with a tiny startup script that reads `src/gui.tcl`.
 
-# Supporting FlexGUI development
+# Supporting FlexProp development
 
-If you find FlexGUI useful, please contribute to support its development. Contributions of code, documentation, and other suggestions are welcome. Monetary donations are also very welcome. The generous donations of our supporters on Patreon have enabled us to provide a signed Windows binary.
+If you find FlexProp useful, please contribute to support its development. Contributions of code, documentation, and other suggestions are welcome. Monetary donations are also very welcome. The generous donations of our supporters on Patreon have enabled us to provide a signed Windows binary.
 
-To support FlexGUI on Patreon: https://patreon.com/totalspectrum
-To support FlexGUI on Paypal:  https://paypal.me/totalspectrum
+To support FlexProp on Patreon: https://patreon.com/totalspectrum
+To support FlexProp on Paypal:  https://paypal.me/totalspectrum
