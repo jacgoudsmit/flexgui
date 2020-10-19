@@ -82,6 +82,9 @@
 ; Base directory to use for installation
 #define BASEDIR     "Total Spectrum Software"
 
+; Short product name for use in directories etc.
+#define SHORTPROD   "FlexProp"
+
 ; The easiest way to set the following information on the installer with
 ; InnoSetup is to extract it from an executable file. Unfortunately the
 ; product name and version number on the FlexProp executable aren't correct
@@ -89,16 +92,21 @@
 ; In case this changes in the future, the code to extract the data is
 ; commented out below.
 ; For now, we get the version from the version.tcl instead, at compile time,
-; using the InnoSetup preprocessor.
-;#define PRODNAME    GetStringFileInfo(EXE, PRODUCT_NAME)
-;#define VERSION     GetStringFileInfo(EXE, FILE_VERSION)
-#define PRODNAME    "FlexProp for Windows"
-#define VERSION     GetTcl("spin2gui_version_major") + "." + GetTcl("spin2gui_version_minor") + "." + GetTcl("spin2gui_version_rev") + GetTcl("spin2gui_beta")
+; using the InnoSetup preprocessor and the script at the top of this file.
+#if 0
+  ; Get the version and product name from the executable
+  #define PRODNAME    GetStringFileInfo(EXE, PRODUCT_NAME)
+  #define VERSION     GetStringFileInfo(EXE, FILE_VERSION)
+#else
+  ; Get the version by parsing the TCL files at compile time,
+  ; and the product name by expanding the short product name
+  #define PRODNAME    SHORTPROD+" for Windows"
+  #define VERSION     GetTcl("spin2gui_version_major") + "." + GetTcl("spin2gui_version_minor") + "." + GetTcl("spin2gui_version_rev") + GetTcl("spin2gui_beta")
+#endif
+
+; Get the company and copyright from the executable
 #define COMPANY     GetFileCompany(EXE)
 #define COPYRIGHT   GetFileCopyright(EXE)
-
-; Short product name for use in directories etc.
-#define SHORTPROD   "FlexProp"
 
 ; Default directory to store projects
 #define DATADIR     "{commondocs}\"+SHORTPROD
@@ -138,9 +146,9 @@ Name: "samples";        Description: "Install Sample Code in {#DATADIR} folder";
 [InstallDelete]
 ; Any files that were ever in the Files section but are no longer in use,
 ; should be moved to this section.
-; example:
-;Type: files; Name: "{app}\nolongerneeded.exe";
 
+; Files from when the program was still called "FlexGUI"
+Type: files; Name: "{group}\FlexGUI for Windows.lnk";
 Type: files; Name: "{app}\flexgui.exe";
 Type: files; Name: "{app}\flexgui.tcl";
 
@@ -237,6 +245,7 @@ begin
     end;
   end;
 end;
+
 
 {
   Override for built-in procedure that gets called at the beginning of each
