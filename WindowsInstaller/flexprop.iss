@@ -152,6 +152,9 @@ Type: files; Name: "{group}\FlexGUI for Windows.lnk";
 Type: files; Name: "{app}\flexgui.exe";
 Type: files; Name: "{app}\flexgui.tcl";
 
+; Files from before fastspin was renamed to flexspin
+Type: files; Name: "{app}\fastspin.exe";
+
 [Dirs]
 ; Create the default directory to store projects
 Name:     "{#DATADIR}"
@@ -167,7 +170,7 @@ Source:   "src\*";                      DestDir: "{app}\src";                   
 Source:   "License.txt";                DestDir: "{app}";                             Flags: ignoreversion;
 Source:   "README.md";                  DestDir: "{app}";                             Flags: ignoreversion;
 
-Source:   "bin\fastspin.exe";           DestDir: "{app}\bin";                         Flags: ignoreversion
+Source:   "bin\flexspin.exe";           DestDir: "{app}\bin";                         Flags: ignoreversion
 Source:   "bin\loadp2.exe";             DestDir: "{app}\bin";                         Flags: ignoreversion; 
 Source:   "bin\proploader.exe";         DestDir: "{app}\bin";                         Flags: ignoreversion; 
 

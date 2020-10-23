@@ -58,7 +58,7 @@ compiled and executed. Note that not all Spin2 DEBUG() commands are
 supported; see the general documentation for details.
 
 "Enable compatibility warnings" will cause the compiler to also warn
-about some differences between fastspin and the official Spin2
+about some differences between flexspin and the official Spin2
 compiler. Fixing these warnings will make porting your code to the
 Parallax compiler easier (although there still may be issues!)
 
