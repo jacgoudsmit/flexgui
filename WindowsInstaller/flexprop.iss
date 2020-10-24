@@ -97,11 +97,13 @@
   ; Get the version and product name from the executable
   #define PRODNAME    GetStringFileInfo(EXE, PRODUCT_NAME)
   #define VERSION     GetStringFileInfo(EXE, FILE_VERSION)
+  #define VERSIONX    VERSION
 #else
   ; Get the version by parsing the TCL files at compile time,
   ; and the product name by expanding the short product name
   #define PRODNAME    SHORTPROD+" for Windows"
-  #define VERSION     GetTcl("spin2gui_version_major") + "." + GetTcl("spin2gui_version_minor") + "." + GetTcl("spin2gui_version_rev") + GetTcl("spin2gui_beta")
+  #define VERSION     GetTcl("spin2gui_version_major") + "." + GetTcl("spin2gui_version_minor") + "." + GetTcl("spin2gui_version_rev")
+  #define VERSIONX    VERSION + GetTcl("spin2gui_beta")
 #endif
 
 ; Get the company and copyright from the executable
@@ -114,13 +116,13 @@
 [Setup]
 AppId={#APPID}
 AppName={#PRODNAME}
-AppVerName={#PRODNAME} {#VERSION}
-AppVersion={#VERSION}
+AppVerName={#PRODNAME} {#VERSIONX}
+AppVersion={#VERSIONX}
 VersionInfoVersion={#VERSION}
 AppCopyright={#COPYRIGHT}
 SourceDir={#SRCDIR}
 OutputDir=.
-OutputBaseFilename={#SHORTPROD}Setup-{#VERSION}
+OutputBaseFilename={#SHORTPROD}Setup-{#VERSIONX}
 AppPublisher={#COMPANY}
 AppPublisherURL={#URL}
 AppSupportURL={#URL}
@@ -151,6 +153,7 @@ Name: "samples";        Description: "Install Sample Code in {#DATADIR} folder";
 Type: files; Name: "{group}\FlexGUI for Windows.lnk";
 Type: files; Name: "{app}\flexgui.exe";
 Type: files; Name: "{app}\flexgui.tcl";
+Type: files; Name: "{app}\src\flexgui.c";
 
 ; Files from before fastspin was renamed to flexspin
 Type: files; Name: "{app}\fastspin.exe";
@@ -170,6 +173,7 @@ Source:   "src\*";                      DestDir: "{app}\src";                   
 Source:   "License.txt";                DestDir: "{app}";                             Flags: ignoreversion;
 Source:   "README.md";                  DestDir: "{app}";                             Flags: ignoreversion;
 
+Source:   "bin\flexcc.exe";             DestDir: "{app}\bin";                         Flags: ignoreversion;
 Source:   "bin\flexspin.exe";           DestDir: "{app}\bin";                         Flags: ignoreversion
 Source:   "bin\loadp2.exe";             DestDir: "{app}\bin";                         Flags: ignoreversion; 
 Source:   "bin\proploader.exe";         DestDir: "{app}\bin";                         Flags: ignoreversion; 
