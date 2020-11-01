@@ -195,7 +195,7 @@ Name:     "{group}\Documentation";      Filename: "{app}\doc";          WorkingD
 ; Files that should go in here are files that weren't installed by the
 ; installer, but need to be deleted to at uninstall time.
 
-Type: files; Name: "{%USERPROFILE}\.flexprop.config"
+Type: files; Name: "{%USERPROFILE}\{code:GetConfigFileName}"
 
 [Run]
 Filename: {app}\flexprop.exe;           Description: "Launch {#SHORTPROD} after installation"; Flags: nowait postinstall skipifsilent
@@ -220,10 +220,10 @@ procedure ReadModifyConfigFileSetting(
   NewConfigFileName: string); { Replacement config file name; blank=don't change }
 var
   S: string;
-  LineCount: Integer;
-  SectionLine: Integer;    
+  LineCount: integer;
+  SectionLine: integer;    
   Lines: TArrayOfString;
-  Replaced: Boolean;
+  Replaced: boolean;
 begin
   if LoadStringsFromFile(FileName, Lines) then
   begin
@@ -261,7 +261,7 @@ end;
 }
 procedure CurStepChanged(CurStep: TSetupStep);
 var
-  Dummy : String;
+  Dummy : string;
 begin
   if (CurStep = ssInstall) then
   begin
@@ -288,4 +288,14 @@ begin
     Log('Replacing config file name');
     ReadModifyConfigFileSetting(ExpandConstant('{app}\src\gui.tcl'), Dummy, ConfigFileName);
   end;
+end;
+
+{
+  This provides the configuration name as a function that can be called from
+  one of the other sections
+}
+function GetConfigFileName(dummy: string) : string;
+begin
+  result := ExtractFileName(ConfigFileName);
+  Log('Config file base name is: ' + result);
 end;
