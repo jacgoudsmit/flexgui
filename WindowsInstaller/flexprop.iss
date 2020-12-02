@@ -140,6 +140,7 @@ SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayName={#PRODNAME}
 PrivilegesRequired=admin
+CloseApplications=yes
 
 [Components]
 Name: "docs";           Description: "Install Documentation";                    Types: full custom
@@ -201,6 +202,8 @@ Type: files; Name: "{%USERPROFILE}\{code:GetConfigFileName}"
 Filename: {app}\flexprop.exe;           Description: "Launch {#SHORTPROD} after installation"; Flags: nowait postinstall skipifsilent
 
 [Code]
+{===========================================================================}
+
 
 const
   UninstallKeyName = 'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\30EA9831-3B35-41B5-8D82-CE51796D014E_is1';
@@ -208,89 +211,280 @@ const
 var
   ConfigFileName: String;
 
-{
-  This procedure reads the give TCL source file and tries to find the
-  line where the CONFIG_FILE variable is set.
-  Optionally, the configuration file name is replaced by a new string.
-  Keep in mind that the file name has to be in double quotes for TCL.
-}
-procedure ReadModifyConfigFileSetting(
-  FileName: string; { TCL source file }
-  var OldConfigFileName: string; { Output old config file name }
-  NewConfigFileName: string); { Replacement config file name; blank=don't change }
-var
-  S: string;
-  LineCount: integer;
-  SectionLine: integer;    
-  Lines: TArrayOfString;
-  Replaced: boolean;
-begin
-  if LoadStringsFromFile(FileName, Lines) then
-  begin
-    Log('Reading or changing file: ' + FileName);
-    LineCount := GetArrayLength(Lines);
-    for SectionLine := 0 to LineCount - 1 do
-    begin
-      S := Lines[SectionLine];
 
-      if (Copy(S, 1, 16) = 'set CONFIG_FILE ') then
-      begin
-        Log('CONFIG location found: ' + S);
-        OldConfigFileName := Copy(Lines[SectionLine], 17, 256);
-        Replaced := (Length(NewConfigFileName) <> 0)
-        if (Replaced) then
-        begin
-          Lines[Sectionline] := 'set CONFIG_FILE ' + NewConfigFileName;
-          Log('Replaced by: ' + Lines[SectionLine]);
-        end;
-        Break;
-      end;
-    end;
-    if (Replaced) then
+{============================================================================
+  Function that returns the default configuration file name.
+  This can't be a const so we put it in a function to make it easy to find.
+}
+function GetDefaultConfigFileName: string;
+begin
+  { result := '"$::env(HOME)/.' + LowerCase(ExpandConstant('{#SHORTPROD}')) + '.config"';}
+  result := '"$CONFIGDIR/.' + LowerCase(ExpandConstant('{#SHORTPROD}')) + '.config"';
+end;
+
+
+{============================================================================
+  Iterate an array of strings and find the given match string.
+  Returns the line number of the first match, or -1 if not found.
+}
+function FindInLines(
+  Lines: TArrayOfString;                { Array of lines }
+  SearchStr: string;                    { String to match }
+  StartLine: integer;                   { First line to start searching; top=0 }
+  var Col: integer)                     { Out: column where string found; BOL=1 }
+  : integer;                            { Returns line number; -1 = not found }
+var
+  row: integer;
+  numlines: integer;
+begin
+  result := -1;
+  numlines := GetArrayLength(Lines);
+
+  for row := StartLine to numlines - 1 do
+  begin
+    Col := pos(SearchStr, Lines[row]);
+    if Col <> 0 then
     begin
-      SaveStringsToFile(FileName, Lines, False);
+      result := row;
+      break;
     end;
   end;
 end;
 
 
-{
-  Override for built-in procedure that gets called at the beginning of each
+{============================================================================
+  Iterate an array of strings and find the given match string.
+  Replace the line by the substitution string if found.
+}
+function ReplaceInLines(
+  var Lines: TArrayOfString;            { Array of lines }
+  SearchStr: string;                    { String to match }
+  StartLine: integer;                   { First line to start searching; top=0 }
+  ReplaceStr: string)                   { String to replace line with }
+  : boolean;                            { Returns true=success }
+var
+  row: integer;
+  dummy: integer;
+begin
+  row := FindInLines(Lines, SearchStr, StartLine, dummy);
+
+  if row >= 0 then
+  begin
+    Log('Replacing: ' + Lines[row]);
+    Log('       By: ' + ReplaceStr);
+
+    Lines[row] := ReplaceStr;
+  end
+  else
+  begin
+    Log('Didn''t find search string so not replacing: ' + SearchStr);
+  end;
+
+  result := row >= 0;
+end;
+
+
+{============================================================================
+  Iterate an array of strings and find the given match string.
+  If found, copy the string following the matched string to the output.
+  If not found, the output string is unchanged.
+}  
+function FindTextGetFollowing(
+  Lines: TArrayOfString;                { Array of lines }
+  SearchStr: string;                    { String to match }
+  StartLine: integer;                   { First line to start searching; top=0 }
+  var OutputStr: string)                { Text stored here; unchanged if search failed }
+  : integer;                            { Returns line number; -1 = not found }
+var
+  col: integer;
+begin
+  result := FindInLines(Lines, SearchStr, 0, col);
+
+  if result >= 0 then
+  begin
+    { Calculate position of string that follows search string }
+    col := col + Length(SearchStr);
+    OutputStr := Copy(Lines[result], col, Length(Lines[result])); { Length is too long, that's okay }
+  end;
+end;
+
+
+{============================================================================
+  Iterate an array of strings and find the given match string.
+  Replace the text following the string by the substitution string if found.
+}
+function FindTextReplaceFollowing(
+  var Lines: TArrayOfString;            { Array of lines }
+  SearchStr: string;                    { String to match }
+  StartLine: integer;                   { First line to start searching: top=0 }
+  ReplaceStr: string)                   { String to replace text following match string }
+  : integer;                            { Returns line number; -1 = not found }
+var
+  col: integer;
+begin
+  result := FindInLines(Lines, SearchStr, 0, col);
+
+  if result >= 0 then
+  begin
+    Log('Replacing: ' + Lines[result]);
+
+    { Calculate length of start of text including search string }
+    col := col + Length(SearchStr) - 1;
+    Lines[result] := copy(Lines[result], 1, col) + ReplaceStr;
+
+    Log('       by: ' + Lines[result]);
+  end;
+end;
+
+
+{============================================================================
+  Initialize the global string that holds the configuration file name
+}
+procedure InitConfigFileName;
+var
+  lines: TArrayOfString;
+begin
+  ConfigFileName := GetDefaultConfigFileName;
+
+  {
+    If we're doing an upgrade install, get the name of the configuration 
+    file from the previous installation
+  }
+  if (RegKeyExists(HKLM, UninstallKeyName)) then
+  begin
+    Log('Detected a previous install. Retrieving the old config name')
+
+    {
+      NOTE: When InnoSetup installers do an upgrade install, the default
+      setting for the application directory 'app' which is defined as
+      DefaultDirName above, is ignored. Instead, it uses the location of
+      the previous version that's being overwritten. So the use of 'app'
+      in the following code is correct.
+    }
+    if LoadStringsFromFile(ExpandConstant('{app}\src\gui.tcl'), lines) then
+    begin
+      if FindTextGetFollowing(lines, 'set CONFIG_FILE ', 0, ConfigFileName) >= 0 then
+      begin
+        Log('Old config file name retrieved successfully');
+      end
+      else
+      begin
+        Log('Unable to find config file setting in old TCL source; configuration may change to the default settings.');
+      end;
+    end
+    else
+    begin
+      Log('Unable to read old TCL source; configuration may change to the default settings.');
+    end;
+  end;
+
+  Log('Using config file name: ' + AddQuotes(ConfigFileName));
+end;
+
+
+{============================================================================
+  Modify the TCL source code so it works with the installed version of the
+  program.
+}
+procedure ModifyTCL(
+  FileName: string);                    { TCL source file name }
+var
+  lines: TArrayOfString;
+  row: integer;
+  col: integer;
+begin
+  if LoadStringsFromFile(FileName, lines) then
+  begin
+    {
+      Find the line that sets CONFIGDIR to $ROOTDIR after checking if the platform is Windows
+      Replace it with blank.
+    }
+    row := FindInLines(lines, 'if { $tcl_platform(platform) == "windows" } {', 0, col);
+    if (row >= 0) and ReplaceInLines(lines, 'set CONFIGDIR $ROOTDIR', row + 1, '') then
+    begin
+      Log('Successfully removed code that changes config file dir to install dir (where users have no write access)'); 
+    end
+    else
+    begin
+      Log('Unable to remove code that changes config file dir to install dir; Saving the configuration may not work. Try uninstalling before reinstalling.');
+    end;
+
+    {
+      Find the line that combines the config directory and the file name.
+      We replace the base name of the configuration file name to deal with
+      the possibility that the TCL code changes the config file name
+      over time (this happened at least once, when the application was
+      renamed).
+      If we do an upgrade install, we modify the TCL source code so it uses
+      the old configuration file name.
+    }
+    row := FindTextReplaceFollowing(lines, 'set CONFIG_FILE ', 0, AddQuotes(ConfigFileName));
+    if row >= 0 then
+    begin
+      Log('Replaced config file name initialization code with: ' + lines[row]);
+    end
+    else
+    begin
+      Log('Unable to find and/or replace config file name init code. Try uninstalling before reinstalling.');
+    end;
+
+    {
+      Further modifications may be inserted here later.
+    }
+
+    {
+      Save the file
+    }
+    if SaveStringsToFile(FileName, lines, false) then
+    begin
+      Log('TCL file saved to ' + AddQuotes(FileName));
+    end
+    else
+    begin
+      Log('TCL source file could not be saved. Try uninstalling and reinstalling.');
+    end;
+  end
+  else
+  begin
+    Log('Unable to read gui.tcl file.');
+  end;
+end;
+
+
+{============================================================================
+  Override built-in procedure that gets called at the beginning of each
   installer step. The override is needed so we can change the configuration
   file location.
 }
 procedure CurStepChanged(CurStep: TSetupStep);
-var
-  Dummy : string;
 begin
   if (CurStep = ssInstall) then
   begin
-    { Initialize the configuration file name }
-    ConfigFileName := '"$::env(HOME)/.' + LowerCase(ExpandConstant('{#SHORTPROD}')) + '.config"';
-
-    {
-      If we're doing an upgrade install, get the name of the configuration 
-      file from the previous installation
-    }
-    if (RegKeyExists(HKLM, UninstallKeyName)) then
-    begin
-      Log('Detected an upgrade install. Retrieving the old config name')
-      ReadModifyConfigFileSetting(ExpandConstant('{app}\src\gui.tcl'), ConfigFileName, '');
-    end;
+    InitConfigFileName;
   end;
 
   if (CurStep = ssPostInstall) then
   begin
-    {
-      After the installation, update the configuration file name in the newly
-      installed TCL source code.
-    }
-    Log('Replacing config file name');
-    ReadModifyConfigFileSetting(ExpandConstant('{app}\src\gui.tcl'), Dummy, ConfigFileName);
+    ModifyTCL(ExpandConstant('{app}\src\gui.tcl'));
   end;
 end;
 
-{
+
+{============================================================================
+  Override built-in procedure that gets called at the beginning of each
+  uninstaller step. The override is needed so we can change the configuration
+  file location.
+}
+procedure CurUnInstallStepChanged(CurStep: TUninstallStep);
+begin
+  if (CurStep = usUnInstall) then
+  begin
+    InitConfigFileName;
+  end;
+end;
+
+
+{============================================================================
   This provides the configuration name as a function that can be called from
   one of the other sections
 }
@@ -299,3 +493,8 @@ begin
   result := ExtractFileName(ConfigFileName);
   Log('Config file base name is: ' + result);
 end;
+
+
+{============================================================================
+  End
+}
