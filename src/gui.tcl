@@ -9,7 +9,7 @@
 set aboutMsg "
 GUI tool for FlexProp
 Version $spin2gui_version
-Copyright 2018-2020 Total Spectrum Software Inc.
+Copyright 2018-2021 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
 output will be correct.   
@@ -42,7 +42,10 @@ if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] 
     set EXE ".mac"
 }
 
-if { [info exists ::env(HOME) ] } {    
+if { [file exists "$ROOTDIR/.flexprop.config"] } {
+    # portable installation
+    set CONFIGDIR $ROOTDIR
+} elseif { [info exists ::env(HOME) ] } {    
     set CONFIGDIR $::env(HOME)
 } else {
     set CONFIGDIR $ROOTDIR
@@ -51,7 +54,6 @@ if { [info exists ::env(HOME) ] } {
 # prefix for starting a command in a window
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
-    set CONFIGDIR $ROOTDIR
 } elseif { [tk windowingsystem] == "aqua" } {
     set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
 } elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
@@ -568,6 +570,8 @@ proc newTabName {} {
 proc createNewTab {} {
     global filenames
     global config
+    global tabEnterScript
+    global tabLeaveScript
     set w [newTabName]
     
     #.p.bot.txt delete 1.0 end
@@ -577,7 +581,12 @@ proc createNewTab {} {
     setfont $w.txt $config(font)
     .p.nb add $w
     .p.nb tab $w -text "New File"
+    
     .p.nb select $w
+
+    bind $w <Enter> $tabLeaveScript
+    bind $w <Leave> $tabEnterScript
+    
     return $w
 }
 
@@ -1039,6 +1048,28 @@ proc doClickOnLink { w coord } {
 }
 
 #
+# help for tabs
+#
+proc tabHelp {w x y} {
+    #set sx $x
+    #set sy $y
+    set sx [expr [winfo pointerx $w]-[winfo rootx .p.nb]]
+    set sy [expr [winfo pointery $w]-[winfo rooty .p.nb]]
+    set t [.p.nb identify tab $sx $sy]
+    global filenames
+    if {$t ne ""} then {
+	set alltabs [.p.nb tabs]
+	set msg1 [.p.nb tab $t -text]
+	set msg2 [getWindowFile [lindex $alltabs $t]]
+	#set msg "$msg1: $msg2"
+	set msg "$msg2"
+	showBalloonHelp $w $msg
+    } else {
+	destroy .balloonHelp
+    }
+}
+
+#
 # set up syntax highlighting for a given ctext widget
 #
 
@@ -1421,6 +1452,14 @@ bind . <$CTRL_PREFIX-l> { doListing }
 bind . <$CTRL_PREFIX-f> { searchrep [focus] 0 }
 bind . <$CTRL_PREFIX-k> { searchrep [focus] 1 }
 bind . <$CTRL_PREFIX-w> { closeTab }
+
+set toolTipScript [list tabHelp %W %x %y]
+set tabEnterScript [list after 1000 $toolTipScript]
+set tabLeaveScript [list after cancel $toolTipScript]
+append tabLeaveScript \n [list after 200 [list destroy .balloonHelp]]
+
+bind .p.nb <Enter> $tabEnterScript
+bind .p.nb <Leave> $tabLeaveScript
 
 # bind to right mouse button on Linux and Windows
 
