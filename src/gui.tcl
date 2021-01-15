@@ -665,6 +665,7 @@ proc loadHelpFile {filename title} {
 	grid .help.f -sticky nsew
     }
     setfont .help.f.txt $config(font)
+    .help.f.txt configure -wrap word
     loadFileToWindow $filename .help.f.txt
     .help.f.txt yview moveto $viewpos
     wm title .help [file tail $filename]
@@ -1401,6 +1402,9 @@ set comport_last [.mbar.comport index end]
 .mbar.help add command -label "C Language" -command { launchBrowser "file://$ROOTDIR/doc/c.html" }
 .mbar.help add command -label "Spin Language" -command { launchBrowser "file://$ROOTDIR/doc/spin.html" }
 .mbar.help add separator
+.mbar.help add command -label "Parallax P1 documentation" -command { launchBrowser "https://www.parallax.com/download/propeller-1-documentation/" }
+.mbar.help add command -label "Parallax P2 documentation" -command { launchBrowser "https://www.parallax.com/propeller-2/documentation" }
+.mbar.help add separator
 .mbar.help add command -label "About..." -command { doAbout }
 
 wm title . "FlexProp"
@@ -2024,6 +2028,7 @@ proc searchrep {t {replace 1}} {
        focus $w
        $w.f icursor end
    }
+    bind $w <Destroy> "searchrep'done $t"
 }
 
 # Find the next instance
@@ -2065,6 +2070,13 @@ proc searchrep'rep1 w {
 proc searchrep'all w {
     set go 1
     while {$go} {set go [searchrep'rep1 $w]}
+}
+
+# done search
+proc searchrep'done w {
+    foreach {from to} [$w tag ranges hilite] {
+        $w tag remove hilite $from $to
+    }
 }
 
 # set the sash position on .p

@@ -1,3 +1,8 @@
+Version 5.0.6
+- Added links to Parallax documentation under Help menu
+- Made help text for GUI wrap
+- Removed search hilight when search window is closed
+
 Version 5.0.4
 - Added tooltips for open file tabs
 - Use $HOME/.flexprop.config for the config file location on Windows too
