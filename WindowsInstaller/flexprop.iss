@@ -1,7 +1,7 @@
 ;============================================================================
 ; Installer for FlexProp
-; Created with Inno Setup 6.0.5.
-; (C) 2019-2020 Jac Goudsmit
+; Created with Inno Setup 6.1.2.
+; (C) 2019-2021 Jac Goudsmit
 ;
 ; Licensed under the MIT license.
 ; See the file License.txt for details.
