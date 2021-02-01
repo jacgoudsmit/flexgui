@@ -1,14 +1,14 @@
-Flexgui as a whole is copyright (c) 2019-2020 Total Spectrum Software Inc.
+Flexgui as a whole is copyright (c) 2019-2021 Total Spectrum Software Inc.
 
 Some individual parts are:
 
-Fastspin is copyright (c) 2011-2020 Total Spectrum Software Inc.
+Fastspin is copyright (c) 2011-2021 Total Spectrum Software Inc.
 
-loadp2 is copyright (c) 2018-2020 Dave Hein and Total Spectrum Software Inc.
+loadp2 is copyright (c) 2018-2021 Dave Hein and Total Spectrum Software Inc.
 
 PropLoader is copyright (c) 2015-2016 David Michael Betz
 
-The Windows installer is copyright (c) 2019-2020 Jac Goudsmit
+The Windows installer is copyright (c) 2019-2021 Jac Goudsmit
 
 All of these are distributed under the terms of the MIT License:
 

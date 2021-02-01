@@ -71,7 +71,15 @@
 ; Source directory
 ; The file you are reading was designed to get its sources from this
 ; location.
-#define SRCDIR      "..\flexprop"
+; This is the location of the directory from where the zip file is
+; created.
+#define SRCDIR      "..\flexprop\"
+
+; Secondary source directory
+; Some files are taken from the main tree instead of the ZIP staging tree.
+; If the installer source code is ever integrated into the main tree,
+; this (and references to this) can be removed.
+#define SRCDIR2     "..\"
 
 ; EXE file to extract version information from
 #define EXE         "flexprop.exe"
@@ -129,7 +137,7 @@ AppSupportURL={#URL}
 AppUpdatesURL={#URL}
 DefaultDirName={commonpf}\{#BASEDIR}\{#PRODNAME}
 ; Set Windows 7 as minimum required version
-MinVersion=0,6.1.7600
+MinVersion=0,6.1sp1
 DisableDirPage=yes
 DefaultGroupName={#PRODNAME}
 DisableProgramGroupPage=yes
@@ -179,8 +187,8 @@ Name:     "{#DATADIR}"
 Source:   "flexprop.exe";               DestDir: "{app}";                             Flags: ignoreversion;
 Source:   "flexprop.tcl";               DestDir: "{app}";                             Flags: ignoreversion;
 Source:   "src\*";                      DestDir: "{app}\src";                         Flags: ignoreversion recursesubdirs;
-Source:   "License.txt";                DestDir: "{app}";                             Flags: ignoreversion;
-Source:   "README.md";                  DestDir: "{app}";                             Flags: ignoreversion;
+Source:   "{#SRCDIR2}License.txt";      DestDir: "{app}";                             Flags: ignoreversion;
+Source:   "{#SRCDIR2}README.md";        DestDir: "{app}";                             Flags: ignoreversion;
 
 Source:   "bin\flexcc.exe";             DestDir: "{app}\bin";                         Flags: ignoreversion;
 Source:   "bin\flexspin.exe";           DestDir: "{app}\bin";                         Flags: ignoreversion
