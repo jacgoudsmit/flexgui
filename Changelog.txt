@@ -1,3 +1,7 @@
+Version 5.1.0
+- Added sanity checks to avoid problems closing the program
+- Made the search/replace box leave the last typed thing selected
+
 Version 5.0.6
 - Added links to Parallax documentation under Help menu
 - Made help text for GUI wrap
