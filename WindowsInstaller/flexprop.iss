@@ -175,6 +175,9 @@ Type: files; Name: "{app}\fastspin.exe";
 ; portable installation into the Program Files(x86) directory.
 Type: files; Name: "{app}\{code:GetConfigFileName}";
 
+; The TCL library source files were moved in 5.2.0.
+Type: filesandordirs; Name: "{app}\src\tcl_library";
+
 [Dirs]
 ; Create the default directory to store projects
 Name:     "{#DATADIR}"
@@ -187,6 +190,7 @@ Name:     "{#DATADIR}"
 Source:   "flexprop.exe";               DestDir: "{app}";                             Flags: ignoreversion;
 Source:   "flexprop.tcl";               DestDir: "{app}";                             Flags: ignoreversion;
 Source:   "src\*";                      DestDir: "{app}\src";                         Flags: ignoreversion recursesubdirs;
+Source:   "tcl_library\*";              DestDir: "{app}\tcl_library";                 Flags: ignoreversion recursesubdirs;
 Source:   "{#SRCDIR2}License.txt";      DestDir: "{app}";                             Flags: ignoreversion;
 Source:   "{#SRCDIR2}README.md";        DestDir: "{app}";                             Flags: ignoreversion;
 
